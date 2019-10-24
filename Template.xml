@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>4.4</version>
+    <date>2019-10-24T13:42:25Z</date>
+    <groups>
+        <group>
+            <name>Advisor Templates</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Template - Windows Physical Disk Info</template>
+            <name>Template - Windows Physical Disk Info</name>
+            <groups>
+                <group>
+                    <name>Advisor Templates</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>PhysicalDisk</name>
+                </application>
+            </applications>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>Discover Discs</name>
+                    <key>system.run[%SystemRoot%\system32\WindowsPowerShell\v1.0\powershell.exe -executionpolicy ByPass -nologo -File &quot;C:\Zabbix\discoverdisks.ps1&quot;]</key>
+                    <delay>1d</delay>
+                    <filter>
+                        <conditions>
+                            <condition>
+                                <macro>{#DISKNUMLET}</macro>
+                                <value>(?i)C:</value>
+                                <formulaid>A</formulaid>
+                            </condition>
+                            <condition>
+                                <macro>{#DISKNUMLET}</macro>
+                                <value>(?i)D:</value>
+                                <formulaid>B</formulaid>
+                            </condition>
+                            <condition>
+                                <macro>{#DISKNUMLET}</macro>
+                                <value>(?i)E:</value>
+                                <formulaid>C</formulaid>
+                            </condition>
+                            <condition>
+                                <macro>{#DISKNUMLET}</macro>
+                                <value>(?i)F:</value>
+                                <formulaid>D</formulaid>
+                            </condition>
+                            <condition>
+                                <macro>{#DISKNUMLET}</macro>
+                                <value>(?i)G:</value>
+                                <formulaid>E</formulaid>
+                            </condition>
+                        </conditions>
+                    </filter>
+                    <lifetime>7d</lifetime>
+                    <description>Encoded command splitted in 6 macro:&#13;
+$drives = Get-WmiObject win32_PerfFormattedData_PerfDisk_PhysicalDisk | ?{$_.name -ne &quot;_Total&quot;} | Select Name;$idx = 1;write-host &quot;{&quot;;write-host &quot; `&quot;data`&quot;:[`n&quot;;foreach ($perfDrives in $drives){if ($idx -lt $drives.Count){       $line= &quot;{ `&quot;{#DISKNUMLET}`&quot; : `&quot;&quot; + $perfDrives.Name + &quot;`&quot; },&quot;;write-host $line;}elseif ($idx -ge $drives.Count){$line= &quot;{ `&quot;{#DISKNUMLET}`&quot; : `&quot;&quot; + $perfDrives.Name + &quot;`&quot; }&quot;;write-host $line;}$idx++;};write-host;write-host &quot; ]&quot;;write-host &quot;}&quot;;</description>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>Disk ({#DISKNUMLET}) - Average Disk Bytes Total</name>
+                            <type>CALCULATED</type>
+                            <key>AvgDiskBytesTotal[({#DISKNUMLET})]</key>
+                            <delay>15s</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>B</units>
+                            <params>last(&quot;perf_counter[\&quot;\234({#DISKNUMLET})\226\&quot;]&quot;,0)+last(&quot;perf_counter[\&quot;\234({#DISKNUMLET})\228\&quot;]&quot;,0)</params>
+                            <applications>
+                                <application>
+                                    <name>PhysicalDisk</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Disk ({#DISKNUMLET}) - % Disk saturation</name>
+                            <type>CALCULATED</type>
+                            <key>DiskSaturation[({#DISKNUMLET})]</key>
+                            <delay>15s</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <params>100-last(&quot;perf_counter[\&quot;\234({#DISKNUMLET})\1482\&quot;]&quot;,0)</params>
+                            <applications>
+                                <application>
+                                    <name>PhysicalDisk</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Disk ({#DISKNUMLET}) - Current Disk Queue Length</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>perf_counter[&quot;\234({#DISKNUMLET})\198&quot;]</key>
+                            <delay>15s</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <applications>
+                                <application>
+                                    <name>PhysicalDisk</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Disk ({#DISKNUMLET}) - Avg. Disk sec/Transfer (Latency)</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>perf_counter[&quot;\234({#DISKNUMLET})\206&quot;]</key>
+                            <delay>15s</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>s</units>
+                            <description>Avg. Disk sec/Transfer (Avg. Disk sec/Read, Avg. Disk sec/Write)&#13;
+Displays the average time the disk transfers took to complete, in seconds. Although the scale is seconds, the counter has millisecond precision, meaning a value of 0.004 indicates the average time for disk transfers to complete was 4 milliseconds.&#13;
+This is the counter in Perfmon used to measure IO latency.</description>
+                            <applications>
+                                <application>
+                                    <name>PhysicalDisk</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>MULTIPLIER</type>
+                                    <params>0.001</params>
+                                </step>
+                            </preprocessing>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{avg(1m)}&gt;=20</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{avg(1m)}&lt;20</recovery_expression>
+                                    <name>Disk ({#DISKNUMLET}) - Disk high latency (&gt;20ms) since 1 minute</name>
+                                    <priority>WARNING</priority>
+                                    <description>Should not be higher than ~20ms</description>
+                                    <manual_close>YES</manual_close>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Disk ({#DISKNUMLET}) - Avg. Disk sec/Read (Latency)</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>perf_counter[&quot;\234({#DISKNUMLET})\208&quot;]</key>
+                            <delay>15s</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>s</units>
+                            <applications>
+                                <application>
+                                    <name>PhysicalDisk</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Disk ({#DISKNUMLET}) - Avg. Disk sec/Write (Latency)</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>perf_counter[&quot;\234({#DISKNUMLET})\210&quot;]</key>
+                            <delay>15s</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>s</units>
+                            <applications>
+                                <application>
+                                    <name>PhysicalDisk</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Disk ({#DISKNUMLET}) - Average Disk Bytes Read</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>perf_counter[&quot;\234({#DISKNUMLET})\226&quot;]</key>
+                            <delay>15s</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>B</units>
+                            <applications>
+                                <application>
+                                    <name>PhysicalDisk</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Disk ({#DISKNUMLET}) - Average Disk Bytes Write</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>perf_counter[&quot;\234({#DISKNUMLET})\228&quot;]</key>
+                            <delay>15s</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>B</units>
+                            <applications>
+                                <application>
+                                    <name>PhysicalDisk</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Disk ({#DISKNUMLET}) - Avg. Disk Queue Length</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>perf_counter[&quot;\234({#DISKNUMLET})\1400&quot;]</key>
+                            <delay>15s</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <applications>
+                                <application>
+                                    <name>PhysicalDisk</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Disk ({#DISKNUMLET}) - % Idle Time</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>perf_counter[&quot;\234({#DISKNUMLET})\1482&quot;]</key>
+                            <delay>15s</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <applications>
+                                <application>
+                                    <name>PhysicalDisk</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                    </item_prototypes>
+                    <trigger_prototypes>
+                        <trigger_prototype>
+                            <expression>{Template - Windows Physical Disk Info:DiskSaturation[({#DISKNUMLET})].avg(5m)}&gt;=99 or {Template - Windows Physical Disk Info:perf_counter[&quot;\234({#DISKNUMLET})\1400&quot;].avg(1m)}&gt;=20</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{Template - Windows Physical Disk Info:DiskSaturation[({#DISKNUMLET})].avg(5m)}&lt;99 or {Template - Windows Physical Disk Info:perf_counter[&quot;\234({#DISKNUMLET})\1400&quot;].avg(1m)}&lt;20</recovery_expression>
+                            <name>Disk ({#DISKNUMLET}) - Disk activity saturation for 5 minutes</name>
+                            <priority>WARNING</priority>
+                            <description>% Idle Time&#13;
+This counter provides a very precise measurement of how much time the disk remained in idle state, meaning all the requests from the operating system to the disk have been completed and there is zero pending requests.&#13;
+This is how it’s calculated, the system timestamps an event when the disk goes idle, then timestamps another event when the disk receives a new request. At the end of the capture interval, we calculate the percentage of the time spent in idle. This counter ranges from 100 (meaning always Idle) to 0 (meaning always busy).</description>
+                            <manual_close>YES</manual_close>
+                        </trigger_prototype>
+                    </trigger_prototypes>
+                    <graph_prototypes>
+                        <graph_prototype>
+                            <name>Disk ({#DISKNUMLET}) - Data Rate</name>
+                            <ymin_type_1>FIXED</ymin_type_1>
+                            <graph_items>
+                                <graph_item>
+                                    <drawtype>GRADIENT_LINE</drawtype>
+                                    <color>1A7C11</color>
+                                    <item>
+                                        <host>Template - Windows Physical Disk Info</host>
+                                        <key>perf_counter[&quot;\234({#DISKNUMLET})\226&quot;]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <drawtype>GRADIENT_LINE</drawtype>
+                                    <color>F63100</color>
+                                    <item>
+                                        <host>Template - Windows Physical Disk Info</host>
+                                        <key>perf_counter[&quot;\234({#DISKNUMLET})\228&quot;]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>2</sortorder>
+                                    <drawtype>BOLD_LINE</drawtype>
+                                    <color>2774A4</color>
+                                    <item>
+                                        <host>Template - Windows Physical Disk Info</host>
+                                        <key>AvgDiskBytesTotal[({#DISKNUMLET})]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <name>Disk ({#DISKNUMLET}) - Latency</name>
+                            <ymin_type_1>FIXED</ymin_type_1>
+                            <graph_items>
+                                <graph_item>
+                                    <drawtype>GRADIENT_LINE</drawtype>
+                                    <color>1A7C11</color>
+                                    <item>
+                                        <host>Template - Windows Physical Disk Info</host>
+                                        <key>perf_counter[&quot;\234({#DISKNUMLET})\208&quot;]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <drawtype>BOLD_LINE</drawtype>
+                                    <color>F63100</color>
+                                    <item>
+                                        <host>Template - Windows Physical Disk Info</host>
+                                        <key>perf_counter[&quot;\234({#DISKNUMLET})\206&quot;]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>2</sortorder>
+                                    <drawtype>GRADIENT_LINE</drawtype>
+                                    <color>2774A4</color>
+                                    <item>
+                                        <host>Template - Windows Physical Disk Info</host>
+                                        <key>perf_counter[&quot;\234({#DISKNUMLET})\210&quot;]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <name>Disk ({#DISKNUMLET}) - Saturation and Queue</name>
+                            <ymin_type_1>FIXED</ymin_type_1>
+                            <ymax_type_1>FIXED</ymax_type_1>
+                            <graph_items>
+                                <graph_item>
+                                    <drawtype>GRADIENT_LINE</drawtype>
+                                    <color>1A7C11</color>
+                                    <item>
+                                        <host>Template - Windows Physical Disk Info</host>
+                                        <key>DiskSaturation[({#DISKNUMLET})]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <drawtype>BOLD_LINE</drawtype>
+                                    <color>F63100</color>
+                                    <yaxisside>RIGHT</yaxisside>
+                                    <item>
+                                        <host>Template - Windows Physical Disk Info</host>
+                                        <key>perf_counter[&quot;\234({#DISKNUMLET})\198&quot;]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                    </graph_prototypes>
+                </discovery_rule>
+            </discovery_rules>
+        </template>
+    </templates>
+</zabbix_export>
