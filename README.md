@@ -20,8 +20,7 @@ EnableRemoteCommands=1
 UnsafeUserParameters=1
 ```
 
-The discovery rule will use a powershell call to collect all the disks. I've used the filter method in zabbix to get only the actual drives from C: to G:. If you have more,
-add them to the filter.
+The discovery rule will use a powershell to collect all the disks. I've used the filter method in zabbix to get only the actual drives from C: to G:. If you have more, add them to the filter.
 
 
 I've tested this on Zabbix 4.4, but it should work as well for older versions.
