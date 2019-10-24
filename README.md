@@ -11,7 +11,7 @@ Also, I don't like working with base64 encoded strings :)
 To make this work, do the following:
 
 - Import the template
-- Put the file "discoverdisks.ps1" in your zabbix agent directory
+- Put the file "discoverdisks.ps1" in on the host under c:\Zabbix. If you want to change this, also adjust the discovery rule
 - Add the following lines to your zabbix agent config:
 
 ```
