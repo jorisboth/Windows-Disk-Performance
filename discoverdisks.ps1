@@ -1,4 +1,5 @@
-$drives = Get-WmiObject win32_PerfFormattedData_PerfDisk_PhysicalDisk | 
+$drives = @{}
+$drives += Get-WmiObject win32_PerfFormattedData_PerfDisk_PhysicalDisk | 
     ?{$_.name -ne "_Total"} |  
     select Name;
 
